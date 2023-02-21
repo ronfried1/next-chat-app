@@ -1,82 +1,105 @@
+import express from "express";
+import { createServer } from "http";
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
 import { ApolloServer } from "@apollo/server";
-import { startStandaloneServer } from "@apollo/server/standalone";
+// import { startStandaloneServer } from "@apollo/server/standalone";
+import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
+import { expressMiddleware } from "@apollo/server/express4";
 import { GraphQLError } from "graphql";
+import { PubSub } from "graphql-subscriptions";
+import cors from "cors";
+import { json } from "body-parser";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import * as dotenv from "dotenv";
+import typeDefs from "./graphql/typeDefs";
+import resolvers from "./graphql/resolvers";
 
 // Apollo Server
 // GraphQL type definitions
 // Resolvers
 
 // dataset
-const books = [
-  {
-    title: "Cooper Codes, The Best Tech Youtuber?",
-    author: "Cooper Codes",
-    id: 1,
-  },
-  {
-    title: "Learn TypeScript",
-    author: "John Doe",
-    id: 2,
-  },
-];
 
-// typedefs
-const typeDefs = `#graphql
-    type Book {
-        title: String
-        author: String
-        id: Int
-    }
-    type Query {
-        books: [Book]
-        getBooksByAuthor(author: String): [Book]
-        getBookByID(id: Int): Book
-    }
-`;
+(async function main() {
+  dotenv.config();
 
-// resolvers
-const resolvers = {
-  Query: {
-    books: () => books,
-    getBooksByAuthor: (_parent, args) => {
-      // args -> { author: "Cooper Codes" }
-      const authorBooks = books.filter((book) => book.author === args.author);
+  //Crerate schema for ApolloServer and WebSockt server
+  const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-      if (authorBooks.length > 0) {
-        return authorBooks;
-      } else {
-        // Throw error
-        throw new GraphQLError(
-          "There are no books with the author " + args.author,
-          {
-            extensions: {
-              code: "BOOKS_NOT_FOUND",
+  //Create Express app and Http Server
+  const app = express();
+  const httpServer = createServer(app);
+
+  // //Create WebSocket Server
+  // const wsServer = new WebSocketServer({
+  //   server: httpServer,
+  //   path: "/graphql/subscriptions",
+  // });
+
+  // Context parameters
+  const pubsub = new PubSub();
+
+  // // Save the returned server's info so we can shutdown this server later
+  // const serverCleanup = useServer(
+  //   {
+  //     schema,
+  //     /*context: (ctx: SubscriptionContext) => {
+  //       // This will be run every time the client sends a subscription request
+  //       // Returning an object will add that information to our
+  //       // GraphQL context, which all of our resolvers have access to.
+  //       return getSubscriptionContext(ctx);
+  //     },*/
+  //   },
+  //   wsServer
+  // );
+
+  // Set up ApolloServer.
+  const server = new ApolloServer({
+    schema,
+    csrfPrevention: true,
+    plugins: [
+      // Proper shutdown for the HTTP server.
+      ApolloServerPluginDrainHttpServer({ httpServer }),
+
+      // Proper shutdown for the WebSocket server.
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              // await serverCleanup.dispose();
             },
-          }
-        );
-      }
-    },
-    getBookByID: (_parent, args) => {
-      const bookIndex = books.findIndex((book) => book.id === args.id);
+          };
+        },
+      },
+    ],
+  });
+  await server.start();
 
-      if (bookIndex !== -1) {
-        return books[bookIndex];
-      } else {
-        throw new GraphQLError("There is no book with the id " + args.id, {
-          extensions: {
-            code: "BOOK_NOT_FOUND",
-          },
-        });
-      }
-    },
-  },
-};
+  const corsOptions = {
+    origin: process.env.CLIENT_ORIGIN,
+    credentials: true,
+  };
 
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
+  app.use(
+    "/graphql",
+    cors<cors.CorsRequest>(corsOptions),
+    json(),
+    expressMiddleware(server, {
+      // context: async ({ req }): Promise<GraphQLContext> => {
+      //   const session = await getSession({ req });
+      //   return { session: session as Session, prisma, pubsub };
+      // },
+    })
+  );
 
-const { url } = await startStandaloneServer(server, {
-  listen: { port: 4000 },
-});
+  // server.applyMiddleware({ app, path: "/graphql", cors: corsOptions });
+
+  const PORT = 4000;
+
+  // Now that our HTTP server is fully set up, we can listen to it.
+  await new Promise<void>((resolve) =>
+    httpServer.listen({ port: PORT }, resolve)
+  );
+  console.log(`Server is now running on http://localhost:${PORT}/graphql`);
+})().catch((err) => console.log(err));
