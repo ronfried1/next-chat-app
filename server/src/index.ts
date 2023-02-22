@@ -63,15 +63,15 @@ import resolvers from "./graphql/resolvers";
       ApolloServerPluginDrainHttpServer({ httpServer }),
 
       // Proper shutdown for the WebSocket server.
-      {
-        async serverWillStart() {
-          return {
-            async drainServer() {
-              // await serverCleanup.dispose();
-            },
-          };
-        },
-      },
+      // {
+      //   async serverWillStart() {
+      //     return {
+      //       async drainServer() {
+      //         await serverCleanup.dispose();
+      //       },
+      //     };
+      //   },
+      // },
     ],
   });
   await server.start();
@@ -85,6 +85,10 @@ import resolvers from "./graphql/resolvers";
     "/graphql",
     cors<cors.CorsRequest>(corsOptions),
     json(),
+    (req, res, next) => {
+      console.log(req.body);
+      next();
+    },
     expressMiddleware(server, {
       // context: async ({ req }): Promise<GraphQLContext> => {
       //   const session = await getSession({ req });
