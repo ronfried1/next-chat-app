@@ -1,5 +1,6 @@
 import express from "express";
 import { createServer } from "http";
+import { PrismaClient } from "@prisma/client";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 import { ApolloServer } from "@apollo/server";
@@ -7,6 +8,7 @@ import { ApolloServer } from "@apollo/server";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import { expressMiddleware } from "@apollo/server/express4";
 import { GraphQLError } from "graphql";
+import { getSession } from "next-auth/react";
 import { PubSub } from "graphql-subscriptions";
 import cors from "cors";
 import { json } from "body-parser";
@@ -14,6 +16,7 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as dotenv from "dotenv";
 import typeDefs from "./graphql/typeDefs";
 import resolvers from "./graphql/resolvers";
+import { GraphQLContext } from "./util/types";
 
 // Apollo Server
 // GraphQL type definitions
@@ -39,6 +42,7 @@ import resolvers from "./graphql/resolvers";
 
   // Context parameters
   const pubsub = new PubSub();
+  const prisma = new PrismaClient();
 
   // // Save the returned server's info so we can shutdown this server later
   // const serverCleanup = useServer(
@@ -90,6 +94,12 @@ import resolvers from "./graphql/resolvers";
       next();
     },
     expressMiddleware(server, {
+      context: async ({ req, res }): Promise<GraphQLContext> => {
+        const session = await getSession({ req });
+        console.log("this is the session here:", session);
+
+        return { session, prisma };
+      },
       // context: async ({ req }): Promise<GraphQLContext> => {
       //   const session = await getSession({ req });
       //   return { session: session as Session, prisma, pubsub };

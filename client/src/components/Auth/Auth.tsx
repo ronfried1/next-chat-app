@@ -23,22 +23,17 @@ const Auth: React.FunctionComponent<IAuthProps> = ({
 
   console.log("here is Data", data, loading, error);
 
-  const onSubmit = (event) => {
-    event.preventDefault();
-    const username = this.state.username;
-    createUsername({ variables: { username } })
-      .then((result) => {
-        console.log(result.data);
-        this.setState({ successMessage: result.data.createUsername.success });
-      })
-      .catch((error) => {
-        console.log(error);
-        this.setState({ errorMessage: "An error occurred. Please try again." });
-      });
+  const onSubmit = async () => {
+    if (!username) return;
+    try {
+      await createUsername({ variables: { username } });
+    } catch (error) {
+      console.log("onSubmit error", error);
+    }
   };
 
   return (
-    <div className="card w-96 bg-base-200 shadow-xl flex justify-center  text-center">
+    <div className="card w-96 bg-base-200 shadow-xl flex justify-center text-center">
       {session ? (
         <div className="card-body items-center text-center">
           <div className="card-title text-2xl content-center mb-8">
