@@ -8,11 +8,15 @@ const Home: NextPage = () => {
 
   console.log("here is data", session);
 
-  const reloadSession = () => {};
+  const reloadSession = () => {
+    const event = new Event("visibilitychange");
+    document.dispatchEvent(event);
+  };
 
   return (
     // flex justify-center items-center h-screen
     <div className="container">
+      {session?.user.username}
       {session?.user.username ? (
         <Chat />
       ) : (

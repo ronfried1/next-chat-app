@@ -4,6 +4,7 @@ import { signIn, signOut } from "next-auth/react";
 import { useState } from "react";
 import UserOperation from "../../graphql/operations/users";
 import { CreateUsernameData, CreateUsernameVariables } from "@/utils/typs";
+import toast from "react-hot-toast";
 
 interface IAuthProps {
   session: Session | null;
@@ -21,14 +22,32 @@ const Auth: React.FunctionComponent<IAuthProps> = ({
     CreateUsernameVariables
   >(UserOperation.Mutations.createUsername);
 
-  console.log("here is Data", data, loading, error);
-
   const onSubmit = async () => {
     if (!username) return;
     try {
-      await createUsername({ variables: { username } });
-    } catch (error) {
+      // data is the same as in line 24
+      const { data } = await createUsername({ variables: { username } });
+      console.log("start");
+
+      if (!data?.createUsername) {
+        throw new Error();
+      }
+      if (data.createUsername.error) {
+        const {
+          createUsername: { error },
+        } = data;
+        throw new Error(error);
+      }
+
+      toast.success("Username successfully created! 🚀 ");
+
+      /**
+       * Reload session to obtain new username
+       */
+      reloadSession();
+    } catch (error: any) {
       console.log("onSubmit error", error);
+      toast.error(error?.message);
     }
   };
 
@@ -46,12 +65,15 @@ const Auth: React.FunctionComponent<IAuthProps> = ({
             onChange={(event) => setUsername(event.target.value)}
           />
           <div className="card-actions mt-3">
-            <button className="btn" onClick={onSubmit}>
-              Save
+            <button
+              className={`btn btn-wide ${loading ? "loading" : ""}`}
+              onClick={onSubmit}
+            >
+              {loading ? "" : "Save"}
             </button>
-            <button className="btn" onClick={() => signOut()}>
+            {/* <button className="btn" onClick={() => signOut()}>
               out
-            </button>
+            </button> */}
           </div>
         </div>
       ) : (
