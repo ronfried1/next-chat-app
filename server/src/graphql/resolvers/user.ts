@@ -1,8 +1,42 @@
+import { User } from "@prisma/client";
 import { CreateUsernameRequest, GraphQLContext } from "../../util/types";
+import { GraphQLError } from "graphql";
 
 const resolvers = {
   Query: {
-    searchUsers: () => {},
+    searchUsers: async (
+      _: any,
+      args: { username: string },
+      context: GraphQLContext
+    ): Promise<Array<User>> => {
+      const { username: searchedUsername } = args;
+      const { session, prisma } = context;
+      if (!session?.user) {
+        throw new GraphQLError("Not authorized");
+      }
+
+      const {
+        user: { username: myUsername },
+      } = session;
+
+      try {
+        const users = await prisma.user.findMany({
+          where: {
+            username: {
+              contains: searchedUsername,
+              not: myUsername,
+              mode: "insensitive",
+            },
+          },
+        });
+
+        return users;
+      } catch (error: any) {
+        console.log("searchUser error", error);
+        // throw new Error();
+        throw new GraphQLError(error?.message);
+      }
+    },
   },
   Mutation: {
     createUsername: async (
@@ -60,9 +94,6 @@ const resolvers = {
           error: error?.message,
         };
       }
-
-      console.log("hey at the api", username);
-      console.log("and the context is: ", context);
     },
   },
   // Subscription: {},

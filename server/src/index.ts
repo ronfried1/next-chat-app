@@ -96,7 +96,6 @@ import { GraphQLContext, Session } from "./util/types";
     expressMiddleware(server, {
       context: async ({ req, res }): Promise<GraphQLContext> => {
         const session = (await getSession({ req })) as Session;
-        console.log("this is the session here:", session);
 
         return { session, prisma };
       },

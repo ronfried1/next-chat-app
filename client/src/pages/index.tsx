@@ -6,8 +6,6 @@ import { Session } from "next-auth";
 const Home: NextPage = () => {
   const { data: session } = useSession();
 
-  console.log("here is data", session);
-
   const reloadSession = () => {
     const event = new Event("visibilitychange");
     document.dispatchEvent(event);
@@ -15,10 +13,10 @@ const Home: NextPage = () => {
 
   return (
     // flex justify-center items-center h-screen
-    <div className="container">
-      {session?.user.username}
+    <div className="container mx-0 ">
+      {/* {session?.user.username} */}
       {session?.user.username ? (
-        <Chat />
+        <Chat session={session} />
       ) : (
         <div className=" flex items-center justify-center h-screen">
           <Auth session={session} reloadSession={reloadSession} />

@@ -1,6 +1,6 @@
 datasource db {
   provider = "mongodb"
-  url      = env("MONGODB_URI")
+  url      = "mongodb+srv://ronf:12345@clusterclone.od3gva7.mongodb.net/chat-app-basic?retryWrites=true&w=majority"
 }
 
 generator client {
