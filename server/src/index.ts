@@ -16,7 +16,7 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as dotenv from "dotenv";
 import typeDefs from "./graphql/typeDefs";
 import resolvers from "./graphql/resolvers";
-import { GraphQLContext } from "./util/types";
+import { GraphQLContext, Session } from "./util/types";
 
 // Apollo Server
 // GraphQL type definitions
@@ -95,7 +95,7 @@ import { GraphQLContext } from "./util/types";
     },
     expressMiddleware(server, {
       context: async ({ req, res }): Promise<GraphQLContext> => {
-        const session = await getSession({ req });
+        const session = await getSession({ req }) as Session ;
         console.log("this is the session here:", session);
 
         return { session, prisma };
