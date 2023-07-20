@@ -12,11 +12,10 @@ export default {
     `,
   },
   Mutations: {
-    createUsername: gql`
-      mutation CreateUsername($username: String!) {
-        createUsername(username: $username) {
-          success
-          error
+    createConversation: gql`
+      mutation CreateConversation($participantIds: [String]!) {
+        createConversation(participantIds: $participantIds) {
+          conversationId
         }
       }
     `,

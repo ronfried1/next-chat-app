@@ -15,9 +15,9 @@ const Home: NextPage = () => {
 
   return (
     // flex justify-center items-center h-screen
-    <div className="container">
+    <div className=" h-screen w-screen">
       {session?.user.username ? (
-        <Chat />
+        <Chat session={session}/>
       ) : (
         <div className=" flex items-center justify-center h-screen">
           <Auth session={session} reloadSession={reloadSession} />

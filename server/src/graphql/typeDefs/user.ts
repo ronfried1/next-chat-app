@@ -2,7 +2,7 @@ import { gql } from "graphql-tag";
 // import { GraphQLError } from "graphql";
 
 const typeDefs = gql`
-  scalar Date
+  # scalar Date 
 
   type User {
     id: String

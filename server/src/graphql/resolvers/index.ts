@@ -1,9 +1,8 @@
 import userResolvers from './user'
-import merge from 'lodash.merge'
+import conversationResolvers from "./conversation";
+import merge from "lodash.merge";
 
-
-const resolvers = merge({}, userResolvers
-)
+const resolvers = merge({}, userResolvers, conversationResolvers);
 
 
 

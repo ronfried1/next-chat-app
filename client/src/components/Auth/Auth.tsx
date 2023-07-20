@@ -1,9 +1,10 @@
+"use client";
 import { useMutation } from "@apollo/client";
 import { Session } from "next-auth";
 import { signIn, signOut } from "next-auth/react";
 import { useState } from "react";
 import UserOperation from "../../graphql/operations/users";
-import { CreateUsernameData, CreateUsernameVariables } from "@/utils/typs";
+import { CreateUsernameData, CreateUsernameVariables } from "@/utils/types";
 import { toast } from "react-hot-toast";
 
 interface IAuthProps {
@@ -23,6 +24,8 @@ const Auth: React.FunctionComponent<IAuthProps> = ({
   >(UserOperation.Mutations.createUsername);
 
   const onSubmit = async () => {
+    console.log("this is username", username);
+
     if (!username) return;
 
     try {
@@ -52,39 +55,44 @@ const Auth: React.FunctionComponent<IAuthProps> = ({
   };
 
   return (
-    <div className="card w-96 bg-base-200 shadow-xl flex justify-center text-center">
+    <div
+      className={
+        "card w-96 bg-base-200 shadow-xl flex justify-center text-center"
+      }
+    >
       {session ? (
-        <div className="card-body items-center text-center">
-          <div className="card-title text-2xl content-center mb-8">
+        <div className={"card-body items-center text-center"}>
+          <div className={"card-title text-2xl content-center mb-8"}>
             Create a username
           </div>
           <input
-            className="input input-bordered w-full max-w-xs"
-            placeholder="Enter a username"
+            className={"input input-bordered w-full max-w-xs"}
+            placeholder={"Enter a username"}
             value={username}
             onChange={(event) => setUsername(event.target.value)}
           />
-          <div className="card-actions mt-3">
-            <button className="btn " onClick={onSubmit}>
+          <div className={"card-actions mt-3"}>
+            <button className={"btn"} onClick={onSubmit}>
+              {loading && <span className={"loading loading-spinner"}></span>}
               Save
             </button>
-            <button className="btn" onClick={() => signOut()}>
+            <button className={"btn"} onClick={() => signOut()}>
               out
             </button>
           </div>
         </div>
       ) : (
-        <div className="card-body items-center text-center">
-          <div className="card-title">MessengerQl </div>
-          <div className="card-actions">
+        <div className={"card-body items-center text-center"}>
+          <div className={"card-title"}>MessengerQl </div>
+          <div className={"card-actions"}>
             <button
-              type="button"
-              className="btn"
+              type={"button"}
+              className={"btn"}
               onClick={() => signIn("google")}
             >
               <img
-                className="w-4 h-4 mr-2 -ml-1"
-                src="/images/googlelogo.png"
+                className={"w-4 h-4 mr-2 -ml-1"}
+                src={"/images/googlelogo.png"}
               />
               Sign in with Google
             </button>
