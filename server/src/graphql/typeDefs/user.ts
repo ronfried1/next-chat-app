@@ -2,9 +2,9 @@ import { gql } from "graphql-tag";
 // import { GraphQLError } from "graphql";
 
 const typeDefs = gql`
-  # scalar Date 
   type User {
     id: String
+    name: String
     username: String
     email: String
     emailVerified: Boolean
@@ -12,12 +12,12 @@ const typeDefs = gql`
   }
 
   type SearchedUser {
-  id: String;
-  username: String;
+    id: String
+    username: String
   }
 
   type Query {
-    searchUsers(username: String): [User]
+    searchUsers(username: String!): [User]
   }
   type Mutation {
     createUsername(username: String!): CreateUsernameResponse

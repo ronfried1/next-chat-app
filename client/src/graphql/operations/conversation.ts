@@ -27,9 +27,7 @@ export default {
   Queries: {
     conversations: gql`
       query Conversations {
-        conversations() {
-          ${ConversationFields}
-        }
+          ${ConversationFields}      
       }
     `,
   },

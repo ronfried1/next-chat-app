@@ -2,7 +2,7 @@ import { gql } from "graphql-tag";
 // import { GraphQLError } from "graphql";
 
 const typeDefs = gql`
-  scaler Date
+  scalar Date
 
   type Mutation {
     createConversation(participantIds: [String]): CreateConversationResponse
@@ -13,7 +13,7 @@ const typeDefs = gql`
 
   type Conversation {
     id: String
-    # latestMessage: message
+    # latestMessage: Message
     participants: [Participant]
     createdAt: Date
     updatedAt: Date
@@ -26,7 +26,7 @@ const typeDefs = gql`
   }
 
   type Query {
-    conversations: [conversation]
+    conversations: [Conversation]
   }
 `;
 
