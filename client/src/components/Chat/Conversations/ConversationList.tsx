@@ -1,19 +1,16 @@
 import { Session } from "next-auth";
-import React, { useRef } from "react";
-import ConversationModal from "./Modal/Modal";
+import React, { useRef, useState } from "react";
+import ForwardedModal from "./Modal/Modal";
 
 interface ConversationListProps {
   session: Session;
 }
 
 const ConversationList = ({ session }: ConversationListProps) => {
-  const modalRef = useRef<HTMLDialogElement>(null);
+  const [isModalOpen, setModalOpen] = useState(false);
 
   const handleToggleModal = () => {
-    const ref = modalRef.current;
-    if (ref) {
-      ref.open ? ref.close() : ref.showModal();
-    }
+    setModalOpen((prev) => !prev);
   };
 
   return (
@@ -28,7 +25,11 @@ const ConversationList = ({ session }: ConversationListProps) => {
           Find or Start a conversation
         </text>
       </div>
-      <ConversationModal session={session} ref={modalRef} />
+      <ForwardedModal
+        session={session}
+        isOpen={isModalOpen}
+        onToggleModal={handleToggleModal}
+      />
     </div>
   );
 };

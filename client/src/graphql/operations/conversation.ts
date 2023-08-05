@@ -1,12 +1,34 @@
 import { gql } from "@apollo/client";
 
-export default {
-  Queries: {
-    searchUsers: gql`
-      query searchUsers($username: String!) {
-        searchUsers(username: $username) {
+const ConversationFields = `
+    conversations {
+      id
+      participants {
+        user {
           id
           username
+        }
+        hasSeenLatestMessage
+      }
+      latestMessage{
+        id
+        sender{
+          id
+          username
+        }
+        body
+        createdAt
+      }
+      updatedAt
+    }
+`;
+
+export default {
+  Queries: {
+    conversations: gql`
+      query Conversations {
+        conversations() {
+          ${ConversationFields}
         }
       }
     `,
