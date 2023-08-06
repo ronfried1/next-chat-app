@@ -1,5 +1,5 @@
 import { GraphQLError } from "graphql";
-import { GraphQLContext } from "../../util/types";
+import { ConversationPopulated, GraphQLContext } from "../../util/types";
 import { Prisma } from "@prisma/client";
 
 const resolvers = {
@@ -8,8 +8,48 @@ const resolvers = {
       _: any,
       __: any,
       context: GraphQLContext
-    ) => {
-      console.log("conversation query");
+    ): Promise<ConversationPopulated[]> => {
+      const { session, prisma } = context;
+
+      if (!session?.user) {
+        throw new GraphQLError("Not authorized");
+      }
+
+      try {
+        const { id } = session.user;
+        /**
+         * Find all conversations that user is part of
+         */
+        const conversations = await prisma.conversation.findMany({
+          /**
+           * Below has been confirmed to be the correct
+           * query by the Prisma team. Has been confirmed
+           * that there is an issue on their end
+           * Issue seems specific to Mongo
+           */
+          // where: {
+          //   participants: {
+          //     some: {
+          //       userId: {
+          //         equals: id,
+          //       },
+          //     },
+          //   },
+          // },
+          include: conversationPopulated,
+        });
+
+        /**
+         * Since above query does not work
+         */
+        return conversations.filter(
+          (conversation) =>
+            !!conversation.participants.find((p) => p.userId === id)
+        );
+      } catch (error: any) {
+        console.log("error", error);
+        throw new GraphQLError(error?.message);
+      }
     },
   },
 

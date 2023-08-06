@@ -1,5 +1,7 @@
+import { ConversationPopulated } from "../../../server/src/util/types";
+
 /**
- * User
+ * Users
  */
 
 export interface CreateUsernameData {
@@ -32,8 +34,12 @@ declare global {
 }
 
 /**
- * Conversations  
+ * Conversations
  */
+
+export interface ConversationData {
+  conversations: ConversationPopulated[];
+}
 
 export interface CreateConversationData {
   createConversation: {

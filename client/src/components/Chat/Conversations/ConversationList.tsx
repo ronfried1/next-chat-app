@@ -1,12 +1,19 @@
 import { Session } from "next-auth";
 import React, { useRef, useState } from "react";
-import ForwardedModal from "./Modal/Modal";
+import ConversationModal from "./Modal/Modal";
+import { ConversationPopulated } from "../../../../../server/src/util/types";
+import conversation from "@/graphql/operations/conversation";
+import ConversationItem from "./ConversationItem";
 
 interface ConversationListProps {
   session: Session;
+  conversations: ConversationPopulated[];
 }
 
-const ConversationList = ({ session }: ConversationListProps) => {
+const ConversationList = ({
+  session,
+  conversations,
+}: ConversationListProps) => {
   const [isModalOpen, setModalOpen] = useState(false);
 
   const handleToggleModal = () => {
@@ -25,11 +32,14 @@ const ConversationList = ({ session }: ConversationListProps) => {
           Find or Start a conversation
         </text>
       </div>
-      <ForwardedModal
+      <ConversationModal
         session={session}
         isOpen={isModalOpen}
         onToggleModal={handleToggleModal}
       />
+      {conversations.map((conversation) => (
+        <ConversationItem key={conversation.id} conversation={conversation} />
+      ))}
     </div>
   );
 };
