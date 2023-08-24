@@ -20,6 +20,8 @@ const ConversationList = ({
     setModalOpen((prev) => !prev);
   };
 
+  console.log("this is the list of conv", conversations);
+  
   return (
     <div className={"flex w-full flex-col"}>
       <div

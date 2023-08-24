@@ -10,6 +10,7 @@ const resolvers = {
       context: GraphQLContext
     ): Promise<ConversationPopulated[]> => {
       const { session, prisma } = context;
+      console.log("inside query conversation");
 
       if (!session?.user) {
         throw new GraphQLError("Not authorized");
@@ -39,6 +40,7 @@ const resolvers = {
           include: conversationPopulated,
         });
 
+        console.log("inside query conversation");
         /**
          * Since above query does not work
          */
@@ -59,7 +61,9 @@ const resolvers = {
       args: { participantIds: string[] },
       context: GraphQLContext
     ): Promise<{ conversationId: string }> => {
-      const { session, prisma } = context;
+      console.log("inside Mutation createConversation");
+
+      const { session, prisma, pubsub } = context;
       const { participantIds } = args;
 
       if (!session?.user) {
@@ -85,12 +89,25 @@ const resolvers = {
         });
 
         //emit a CONVERSATION_CREATED event using pubsub
-
+        pubsub.publish("CONVERSATION_CREATED", {
+          conversationCreated: conversation,
+        });
+        console.log("inside Mutation createConversation after publishing");
         return { conversationId: conversation.id };
       } catch (error: any) {
         console.log("createConversation error", error.message);
         throw new GraphQLError("Error creating conversation");
       }
+    },
+  },
+  Subscription: {
+    conversationCreated: {
+      subscribe: (_: any, __: any, context: GraphQLContext) => {
+        console.log("inside the sub sub sub");
+        const { pubsub } = context;
+
+        return pubsub.asyncIterator(["CONVERSATION_CREATED"]);
+      },
     },
   },
 };

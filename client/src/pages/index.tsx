@@ -6,8 +6,6 @@ import { Session } from "next-auth";
 const Home: NextPage = () => {
   const { data: session } = useSession();
 
-  console.log("here is data", session);
-
   const reloadSession = () => {
     const event = new Event("visibilitychange");
     document.dispatchEvent(event);

@@ -16,7 +16,7 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as dotenv from "dotenv";
 import typeDefs from "./graphql/typeDefs";
 import resolvers from "./graphql/resolvers";
-import { GraphQLContext, Session } from "./util/types";
+import { GraphQLContext, Session, SubscriptionContext } from "./util/types";
 
 // Apollo Server
 // GraphQL type definitions
@@ -34,29 +34,49 @@ import { GraphQLContext, Session } from "./util/types";
   const app = express();
   const httpServer = createServer(app);
 
-  // //Create WebSocket Server
-  // const wsServer = new WebSocketServer({
-  //   server: httpServer,
-  //   path: "/graphql/subscriptions",
-  // });
+  //Create WebSocket Server
+  const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: "/graphql/subscriptions",
+  });
 
   // Context parameters
-  const pubsub = new PubSub();
   const prisma = new PrismaClient();
+  const pubsub = new PubSub();
 
-  // // Save the returned server's info so we can shutdown this server later
-  // const serverCleanup = useServer(
-  //   {
-  //     schema,
-  //     /*context: (ctx: SubscriptionContext) => {
-  //       // This will be run every time the client sends a subscription request
-  //       // Returning an object will add that information to our
-  //       // GraphQL context, which all of our resolvers have access to.
-  //       return getSubscriptionContext(ctx);
-  //     },*/
-  //   },
-  //   wsServer
-  // );
+  const getSubscriptionContext = async (
+    ctx: SubscriptionContext
+  ): Promise<GraphQLContext> => {
+    ctx;
+    // ctx is the graphql-ws Context where connectionParams live
+    if (ctx.connectionParams && ctx.connectionParams.session) {
+      const { session } = ctx.connectionParams;
+      return { session, prisma, pubsub };
+    }
+    // Otherwise let our resolvers know we don't have a current user
+    return { session: null, prisma, pubsub };
+  };
+
+  // Save the returned server's info so we can shutdown this server later
+  const serverCleanup = useServer(
+    {
+      schema,
+      // This will be run every time the client sends a subscription request
+      // Returning an object will add that information to our
+      // GraphQL context, which all of our resolvers have access to.
+      // context: (ctx: SubscriptionContext) => {
+      //   return getSubscriptionContext(ctx);
+      // },
+      context: async (ctx: SubscriptionContext) => {
+        if (ctx.connectionParams && ctx.connectionParams.session) {
+          const { session } = ctx.connectionParams;
+          return { session, prisma, pubsub };
+        }
+        return { session: null, prisma, pubsub };
+      },
+    },
+    wsServer
+  );
 
   // Set up ApolloServer.
   const server = new ApolloServer({
@@ -67,15 +87,15 @@ import { GraphQLContext, Session } from "./util/types";
       ApolloServerPluginDrainHttpServer({ httpServer }),
 
       // Proper shutdown for the WebSocket server.
-      // {
-      //   async serverWillStart() {
-      //     return {
-      //       async drainServer() {
-      //         await serverCleanup.dispose();
-      //       },
-      //     };
-      //   },
-      // },
+      {
+        async serverWillStart() {
+          return {
+            async drainServer() {
+              await serverCleanup.dispose();
+            },
+          };
+        },
+      },
     ],
   });
   await server.start();
@@ -95,10 +115,14 @@ import { GraphQLContext, Session } from "./util/types";
     },
     expressMiddleware(server, {
       context: async ({ req, res }): Promise<GraphQLContext> => {
-        const session = await getSession({ req }) as Session ;
-        console.log("this is the session here:", session);
+        const session = (await getSession({ req })) as Session;
+        console.log(
+          " session info:",
+          session.user.email,
+          session.user.username
+        );
 
-        return { session, prisma };
+        return { session, prisma, pubsub };
       },
       // context: async ({ req }): Promise<GraphQLContext> => {
       //   const session = await getSession({ req });

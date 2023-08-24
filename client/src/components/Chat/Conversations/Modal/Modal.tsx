@@ -61,7 +61,7 @@ const Modal: React.FC<ModalProps> = ({ session, isOpen, onToggleModal }) => {
       setUsername("");
       onToggleModal();
 
-      console.log("here is data", data);
+      console.log("here is data onCreateConversation", data);
     } catch (error: any) {
       console.log("onCreateConversation error, error");
       toast.error(error?.message);
